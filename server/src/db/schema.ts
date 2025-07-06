@@ -1,5 +1,5 @@
 
-import { serial, text, pgTable, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import { serial, text, pgTable, timestamp, pgEnum, integer } from 'drizzle-orm/pg-core';
 
 // Define conversion status enum
 export const conversionStatusEnum = pgEnum('conversion_status', ['pending', 'processing', 'completed', 'failed']);
@@ -10,6 +10,7 @@ export const videoConversionRequestsTable = pgTable('video_conversion_requests',
   title: text('title'),
   description: text('description'),
   status: conversionStatusEnum('status').notNull().default('pending'),
+  progress_percentage: integer('progress_percentage').notNull().default(0),
   error_message: text('error_message'),
   short_video_url: text('short_video_url'),
   download_url: text('download_url'),

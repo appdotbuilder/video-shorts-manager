@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { trpc } from '@/utils/trpc';
 import { useState, useEffect, useCallback } from 'react';
 import { VideoIcon, DownloadIcon, ClockIcon, CheckCircleIcon, XCircleIcon, PlayIcon, AlertCircleIcon, RefreshCwIcon } from 'lucide-react';
@@ -363,8 +364,20 @@ function App() {
                           </p>
                         )}
                       </div>
-                      <div className="ml-4">
-                        {getStatusBadge(request.status)}
+                      <div className="ml-4 flex flex-col items-end gap-2">
+                        {request.status === 'processing' ? (
+                          <div className="w-32">
+                            <div className="text-right text-sm font-medium text-blue-600 mb-1">
+                              {request.progress_percentage}%
+                            </div>
+                            <Progress value={request.progress_percentage} className="w-full h-2" />
+                            <Badge className="bg-blue-100 text-blue-800 border-blue-200 mt-2 flex items-center gap-1 border justify-center">
+                              <PlayIcon size={12} /> Processing
+                            </Badge>
+                          </div>
+                        ) : (
+                          getStatusBadge(request.status)
+                        )}
                       </div>
                     </div>
 

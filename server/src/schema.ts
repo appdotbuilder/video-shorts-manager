@@ -12,6 +12,7 @@ export const videoConversionRequestSchema = z.object({
   title: z.string().nullable(),
   description: z.string().nullable(),
   status: conversionStatusEnum,
+  progress_percentage: z.number().int().min(0).max(100),
   error_message: z.string().nullable(),
   short_video_url: z.string().url().nullable(),
   download_url: z.string().url().nullable(),
@@ -37,7 +38,8 @@ export const updateVideoConversionRequestStatusInputSchema = z.object({
   status: conversionStatusEnum,
   error_message: z.string().optional(),
   short_video_url: z.string().url().optional(),
-  download_url: z.string().url().optional()
+  download_url: z.string().url().optional(),
+  progress_percentage: z.number().int().min(0).max(100).optional()
 });
 
 export type UpdateVideoConversionRequestStatusInput = z.infer<typeof updateVideoConversionRequestStatusInputSchema>;

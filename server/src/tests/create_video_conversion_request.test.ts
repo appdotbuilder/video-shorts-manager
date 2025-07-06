@@ -31,6 +31,7 @@ describe('createVideoConversionRequest', () => {
     expect(result.title).toEqual('Test Video');
     expect(result.description).toEqual('A test video for conversion');
     expect(result.status).toEqual('pending');
+    expect(result.progress_percentage).toEqual(0);
     expect(result.error_message).toBeNull();
     expect(result.short_video_url).toBeNull();
     expect(result.download_url).toBeNull();
@@ -47,6 +48,7 @@ describe('createVideoConversionRequest', () => {
     expect(result.title).toBeNull();
     expect(result.description).toBeNull();
     expect(result.status).toEqual('pending');
+    expect(result.progress_percentage).toEqual(0);
     expect(result.id).toBeDefined();
     expect(result.created_at).toBeInstanceOf(Date);
   });
@@ -65,14 +67,16 @@ describe('createVideoConversionRequest', () => {
     expect(requests[0].title).toEqual('Test Video');
     expect(requests[0].description).toEqual('A test video for conversion');
     expect(requests[0].status).toEqual('pending');
+    expect(requests[0].progress_percentage).toEqual(0);
     expect(requests[0].created_at).toBeInstanceOf(Date);
     expect(requests[0].updated_at).toBeInstanceOf(Date);
   });
 
-  it('should set default status to pending', async () => {
+  it('should set default status to pending and progress to 0', async () => {
     const result = await createVideoConversionRequest(testInput);
 
     expect(result.status).toEqual('pending');
+    expect(result.progress_percentage).toEqual(0);
 
     // Verify in database
     const requests = await db.select()
@@ -81,6 +85,7 @@ describe('createVideoConversionRequest', () => {
       .execute();
 
     expect(requests[0].status).toEqual('pending');
+    expect(requests[0].progress_percentage).toEqual(0);
   });
 
   it('should handle multiple requests with different URLs', async () => {

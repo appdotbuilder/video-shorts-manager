@@ -25,9 +25,14 @@ export const updateVideoConversionRequestStatus = async (input: UpdateVideoConve
       updateValues.download_url = input.download_url;
     }
 
-    // Set completed_at timestamp when status is 'completed'
+    // Handle progress percentage logic
     if (input.status === 'completed') {
       updateValues.completed_at = new Date();
+      updateValues.progress_percentage = 100; // Force to 100 if completed
+    } else if (input.progress_percentage !== undefined) {
+      updateValues.progress_percentage = input.progress_percentage;
+    } else if (input.status === 'failed') {
+      updateValues.progress_percentage = 0; // Reset to 0 if failed
     }
 
     // Update the video conversion request

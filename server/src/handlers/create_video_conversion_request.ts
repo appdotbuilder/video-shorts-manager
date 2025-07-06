@@ -11,7 +11,8 @@ export const createVideoConversionRequest = async (input: CreateVideoConversionR
         original_url: input.original_url,
         title: input.title || null,
         description: input.description || null,
-        status: 'pending' // Default status for new requests
+        status: 'pending', // Default status for new requests
+        progress_percentage: 0 // Explicitly set default to 0
       })
       .returning()
       .execute();

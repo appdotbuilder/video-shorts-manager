@@ -18,7 +18,8 @@ describe('updateVideoConversionRequestStatus', () => {
         original_url: 'https://example.com/video.mp4',
         title: 'Test Video',
         description: 'Test description',
-        status: 'pending'
+        status: 'pending',
+        progress_percentage: 0
       })
       .returning()
       .execute();
@@ -40,13 +41,14 @@ describe('updateVideoConversionRequestStatus', () => {
     expect(result.completed_at).toBeNull();
   });
 
-  it('should update status to completed and set completed_at timestamp', async () => {
+  it('should update status to completed and set completed_at timestamp and progress to 100', async () => {
     // Create a video conversion request directly in the database
     const createResult = await db.insert(videoConversionRequestsTable)
       .values({
         original_url: 'https://example.com/video.mp4',
         title: 'Test Video',
-        status: 'pending'
+        status: 'pending',
+        progress_percentage: 0
       })
       .returning()
       .execute();
@@ -64,18 +66,20 @@ describe('updateVideoConversionRequestStatus', () => {
     const result = await updateVideoConversionRequestStatus(updateInput);
 
     expect(result.status).toEqual('completed');
+    expect(result.progress_percentage).toEqual(100);
     expect(result.short_video_url).toEqual('https://example.com/short.mp4');
     expect(result.download_url).toEqual('https://example.com/download.mp4');
     expect(result.completed_at).toBeInstanceOf(Date);
     expect(result.completed_at).not.toBeNull();
   });
 
-  it('should update status to failed with error message', async () => {
+  it('should update status to failed with error message and reset progress to 0', async () => {
     // Create a video conversion request directly in the database
     const createResult = await db.insert(videoConversionRequestsTable)
       .values({
         original_url: 'https://example.com/video.mp4',
-        status: 'pending'
+        status: 'processing',
+        progress_percentage: 50
       })
       .returning()
       .execute();
@@ -92,6 +96,7 @@ describe('updateVideoConversionRequestStatus', () => {
     const result = await updateVideoConversionRequestStatus(updateInput);
 
     expect(result.status).toEqual('failed');
+    expect(result.progress_percentage).toEqual(0);
     expect(result.error_message).toEqual('Video processing failed due to invalid format');
     expect(result.completed_at).toBeNull();
   });
@@ -102,7 +107,8 @@ describe('updateVideoConversionRequestStatus', () => {
       .values({
         original_url: 'https://example.com/video.mp4',
         title: 'Test Video',
-        status: 'pending'
+        status: 'pending',
+        progress_percentage: 0
       })
       .returning()
       .execute();
@@ -127,6 +133,7 @@ describe('updateVideoConversionRequestStatus', () => {
 
     expect(saved).toHaveLength(1);
     expect(saved[0].status).toEqual('completed');
+    expect(saved[0].progress_percentage).toEqual(100);
     expect(saved[0].short_video_url).toEqual('https://example.com/short.mp4');
     expect(saved[0].download_url).toEqual('https://example.com/download.mp4');
     expect(saved[0].completed_at).toBeInstanceOf(Date);
@@ -149,7 +156,8 @@ describe('updateVideoConversionRequestStatus', () => {
       .values({
         original_url: 'https://example.com/video.mp4',
         title: 'Test Video',
-        status: 'pending'
+        status: 'pending',
+        progress_percentage: 0
       })
       .returning()
       .execute();
@@ -169,5 +177,60 @@ describe('updateVideoConversionRequestStatus', () => {
     expect(result.short_video_url).toEqual('https://example.com/short.mp4');
     expect(result.download_url).toBeNull();
     expect(result.error_message).toBeNull();
+  });
+
+  it('should update progress percentage when provided', async () => {
+    // Create a video conversion request directly in the database
+    const createResult = await db.insert(videoConversionRequestsTable)
+      .values({
+        original_url: 'https://example.com/video.mp4',
+        status: 'processing',
+        progress_percentage: 25
+      })
+      .returning()
+      .execute();
+
+    const createdRequest = createResult[0];
+
+    // Update progress percentage
+    const updateInput: UpdateVideoConversionRequestStatusInput = {
+      id: createdRequest.id,
+      status: 'processing',
+      progress_percentage: 75
+    };
+
+    const result = await updateVideoConversionRequestStatus(updateInput);
+
+    expect(result.status).toEqual('processing');
+    expect(result.progress_percentage).toEqual(75);
+  });
+
+  it('should force progress to 100 when status is completed regardless of input', async () => {
+    // Create a video conversion request directly in the database
+    const createResult = await db.insert(videoConversionRequestsTable)
+      .values({
+        original_url: 'https://example.com/video.mp4',
+        status: 'processing',
+        progress_percentage: 50
+      })
+      .returning()
+      .execute();
+
+    const createdRequest = createResult[0];
+
+    // Update to completed with lower progress percentage
+    const updateInput: UpdateVideoConversionRequestStatusInput = {
+      id: createdRequest.id,
+      status: 'completed',
+      progress_percentage: 80, // Should be overridden to 100
+      short_video_url: 'https://example.com/short.mp4',
+      download_url: 'https://example.com/download.mp4'
+    };
+
+    const result = await updateVideoConversionRequestStatus(updateInput);
+
+    expect(result.status).toEqual('completed');
+    expect(result.progress_percentage).toEqual(100); // Should be forced to 100
+    expect(result.completed_at).toBeInstanceOf(Date);
   });
 });
