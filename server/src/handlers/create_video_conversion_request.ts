@@ -1,21 +1,24 @@
 
+import { db } from '../db';
+import { videoConversionRequestsTable } from '../db/schema';
 import { type CreateVideoConversionRequestInput, type VideoConversionRequest } from '../schema';
 
 export const createVideoConversionRequest = async (input: CreateVideoConversionRequestInput): Promise<VideoConversionRequest> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new video conversion request and persisting it in the database.
-    // It should validate the video URL, extract metadata if possible, and set initial status to 'pending'.
-    return Promise.resolve({
-        id: 1, // Placeholder ID
+  try {
+    // Insert video conversion request record
+    const result = await db.insert(videoConversionRequestsTable)
+      .values({
         original_url: input.original_url,
         title: input.title || null,
         description: input.description || null,
-        status: 'pending' as const,
-        error_message: null,
-        short_video_url: null,
-        download_url: null,
-        created_at: new Date(),
-        updated_at: new Date(),
-        completed_at: null
-    } as VideoConversionRequest);
+        status: 'pending' // Default status for new requests
+      })
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('Video conversion request creation failed:', error);
+    throw error;
+  }
 };

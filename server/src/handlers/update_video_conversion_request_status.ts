@@ -1,23 +1,49 @@
 
+import { db } from '../db';
+import { videoConversionRequestsTable } from '../db/schema';
 import { type UpdateVideoConversionRequestStatusInput, type VideoConversionRequest } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export const updateVideoConversionRequestStatus = async (input: UpdateVideoConversionRequestStatusInput): Promise<VideoConversionRequest> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is updating the status of a video conversion request.
-    // It should update the status, error_message, short_video_url, download_url fields as needed.
-    // When status is set to 'completed', it should also set completed_at timestamp.
-    // It should always update the updated_at timestamp.
-    return Promise.resolve({
-        id: input.id,
-        original_url: 'https://example.com/video.mp4', // Placeholder
-        title: null,
-        description: null,
-        status: input.status,
-        error_message: input.error_message || null,
-        short_video_url: input.short_video_url || null,
-        download_url: input.download_url || null,
-        created_at: new Date(),
-        updated_at: new Date(),
-        completed_at: input.status === 'completed' ? new Date() : null
-    } as VideoConversionRequest);
+  try {
+    // Prepare update values
+    const updateValues: any = {
+      status: input.status,
+      updated_at: new Date()
+    };
+
+    // Add optional fields if provided
+    if (input.error_message !== undefined) {
+      updateValues.error_message = input.error_message;
+    }
+
+    if (input.short_video_url !== undefined) {
+      updateValues.short_video_url = input.short_video_url;
+    }
+
+    if (input.download_url !== undefined) {
+      updateValues.download_url = input.download_url;
+    }
+
+    // Set completed_at timestamp when status is 'completed'
+    if (input.status === 'completed') {
+      updateValues.completed_at = new Date();
+    }
+
+    // Update the video conversion request
+    const result = await db.update(videoConversionRequestsTable)
+      .set(updateValues)
+      .where(eq(videoConversionRequestsTable.id, input.id))
+      .returning()
+      .execute();
+
+    if (result.length === 0) {
+      throw new Error(`Video conversion request with id ${input.id} not found`);
+    }
+
+    return result[0];
+  } catch (error) {
+    console.error('Video conversion request status update failed:', error);
+    throw error;
+  }
 };

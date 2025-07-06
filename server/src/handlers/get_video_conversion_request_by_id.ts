@@ -1,9 +1,23 @@
 
+import { db } from '../db';
+import { videoConversionRequestsTable } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import { type GetVideoConversionRequestByIdInput, type VideoConversionRequest } from '../schema';
 
 export const getVideoConversionRequestById = async (input: GetVideoConversionRequestByIdInput): Promise<VideoConversionRequest | null> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching a single video conversion request by its ID.
-    // It should return null if the request is not found.
-    return Promise.resolve(null);
+  try {
+    const results = await db.select()
+      .from(videoConversionRequestsTable)
+      .where(eq(videoConversionRequestsTable.id, input.id))
+      .execute();
+
+    if (results.length === 0) {
+      return null;
+    }
+
+    return results[0];
+  } catch (error) {
+    console.error('Failed to get video conversion request by ID:', error);
+    throw error;
+  }
 };
